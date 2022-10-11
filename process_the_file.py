@@ -24,7 +24,7 @@ def read_csv(name):
 
 def add_lesson_to_prepod(prepod: dict, weekday, num_of_lesson, chetnost, predmet, type_of_lesson, auditorium, group) -> dict:
     if prepod.get(weekday) != None:
-        if prepod[weekday].get(num_of_lesson) != None:
+        if prepod[weekday].get(num_of_lesson) != None: #ТУТ СДЕЛАТЬ ПРОВЕРКУ НА СОВПАДЕНИЕ ГРУПП!!!
             prepod[weekday][num_of_lesson][chetnost] = {
                     'Предмет': predmet,
                     'Вид занятий': type_of_lesson,
@@ -111,4 +111,4 @@ def preparate_data(file) -> dict:
 def process(name):
     file = read_csv(name)
     return preparate_data(file)
-pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))
+# pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))

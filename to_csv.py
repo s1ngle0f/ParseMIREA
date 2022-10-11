@@ -1,6 +1,8 @@
 import pandas as pd
 
 
+END_LINE_IN_FILE = 85
+
 def fill_free_space(path):
     file = pd.read_csv(path)
     # print(type(file.iloc[0, 0]), file.iloc[0, 0])
@@ -15,6 +17,7 @@ def fill_free_space(path):
                         last_day = file.iloc[i_row, n_col]
                     file.iloc[i_row, n_col] = last_day
     # print(file.iloc[:, 0])
+    file = file.iloc[:END_LINE_IN_FILE,:]
     file.to_csv(path, index=False)
 
 
@@ -28,5 +31,5 @@ def create_csv_from_excel(name):
     csv_path = f'csv/{path[path.find("/")+1:].replace(".xlsx", ".csv")}'
     read_file.to_csv(csv_path, header=False, index=False)
     fill_free_space(csv_path)
-create_csv_from_excel('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
+# create_csv_from_excel('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
