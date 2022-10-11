@@ -1,3 +1,4 @@
+import os
 import pprint
 
 import pandas as pd
@@ -10,5 +11,7 @@ print(
 )
 
 pprint.pprint(dic)
+for files in os.listdir('input'):
+    print(files)
 
 print(file.columns[5])

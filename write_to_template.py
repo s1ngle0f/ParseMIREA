@@ -49,12 +49,14 @@ def write(name):
 
     template = openpyxl.load_workbook('templates/pattern_prepod.xlsx')['Шаблон']
 
-    for k, v in preparated_data.items():
+    for fio, v in preparated_data.items():
+        k = fio.replace('/', ' ')
         try:
             ws = wb.get_sheet_by_name(k)
         except:
             ws = wb.create_sheet(k)
-        copy_sheet.copy_sheet(template, ws)
+            copy_sheet.copy_sheet(template, ws)
+
         for weekday, lessons in v.items():
             for num_lesson, chetnost in lessons.items():
                 for num_chetnost, info in chetnost.items():
@@ -67,7 +69,12 @@ def write(name):
                     ws[f'I{line_num}'] = info.get('Группа')
 
     wb.save('output/prepodi_result.xlsx')
+# write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
-    
-write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
+
+def write_all():
+    for files in os.listdir('input'):
+        write(files)
+
+write_all()
 
