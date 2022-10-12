@@ -4,6 +4,16 @@ import pandas as pd
 import to_csv
 
 
+ONE_PART = 15
+COUNT_GROUPS_IN_ONE_PART = 2
+COLS_BEETWEN_GROUPS = 5
+FIO_COL = 7
+CHETNOST_COL = 4
+PREDMET_COL = 5
+TYPE_OF_LESSON_COL = 6
+AUDITORIUM_COL = 8
+GROUP_COL = 5
+
 def read_csv(name):
     to_csv.create_csv_from_excel(name)
     path = f'csv/{name.replace(".xlsx", ".csv")}' if name.find('.xlsx') else f'csv/{name}'
@@ -56,82 +66,62 @@ def add_lesson_to_prepod(prepod: dict, weekday, num_of_lesson, chetnost, predmet
     return prepod
 
 
+def preparate_one_prepod(file, res, fio, index, part, CFNG):
+    if res.get(fio) != None:
+        res[fio] = add_lesson_to_prepod(res[fio], file.iloc[index, 0], str(file.iloc[index, 1]),
+                                        str(file.iloc[index, CHETNOST_COL]),
+                                        file.iloc[index, part + CFNG + PREDMET_COL], file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                                        file.iloc[index, part + CFNG + AUDITORIUM_COL], file.columns[part + CFNG + GROUP_COL])
+    else:
+        res[fio] = {  # ФИО
+            file.iloc[index, 0]: {  # День недели
+                str(file.iloc[index, 1]): {  # Номер пары
+                    str(file.iloc[index, CHETNOST_COL]):  # Четность недель
+                        {
+                            'Предмет': file.iloc[index, part + CFNG + PREDMET_COL],
+                            'Вид занятий': file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                            'Аудитория': file.iloc[index, part + CFNG + AUDITORIUM_COL],
+                            'Группа': file.columns[part + CFNG + GROUP_COL]
+                        }
+                }
+            }
+        }
+
+
 def preparate_data(file) -> dict:
     res = {}
-    for part in range(0, len(file.columns), 15):
-        for CFNG in range(0, 6, 5): #Корректор для сдвига для следующих учебных групп в одном паттерне расписания
-            fio_col = part + CFNG + 7
+    for part in range(0, len(file.columns), ONE_PART):
+        for CFNG in range(0, (COUNT_GROUPS_IN_ONE_PART-1)*COLS_BEETWEN_GROUPS+1, COLS_BEETWEN_GROUPS): #Корректор для сдвига для следующих учебных групп в одном паттерне расписания
+            fio_col = part + CFNG + FIO_COL
             if fio_col < len(file.columns):
                 for index, fio in enumerate(file.iloc[:, fio_col]): # Проверить на наличие бага с совпадением расписания
                     if type(fio) == str and index > 0:
-                        if fio.find('\n\n') == -1 and fio.find(',') == -1:
-                            if res.get(fio) != None:
-                                res[fio] = add_lesson_to_prepod(res[fio], file.iloc[index, 0], str(file.iloc[index, 1]), str(file.iloc[index, 4]),
-                                                    file.iloc[index, part + CFNG + 5], file.iloc[index, part + CFNG + 6], file.iloc[index, part + CFNG + 8], file.columns[part + CFNG + 5])
-                            else:
-                                res[fio] = { # ФИО
-                                    file.iloc[index, 0]: { # День недели
-                                        str(file.iloc[index, 1]): { # Номер пары
-                                            str(file.iloc[index, 4]): # Четность недель
-                                                {
-                                                    'Предмет': file.iloc[index, part + CFNG + 5],
-                                                    'Вид занятий': file.iloc[index, part + CFNG + 6],
-                                                    'Аудитория': file.iloc[index, part + CFNG + 8],
-                                                    'Группа': file.columns[part + CFNG + 5]
-                                                }
-                                        }
-                                    }
-                                }
-                        elif fio.find(',') != -1:
+                        # if fio.find('\n\n') == -1 and fio.find(',') == -1:
+                        #     preparate_one_prepod(file, res, fio, index, part, CFNG)
+                        # elif fio.find(',') != -1:
+                        #     fios = fio.split(',')
+                        #     # print(fio, fios)
+                        #     for local_fio in fios:
+                        #         preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        # else:
+                        #     fios = fio.split('\n\n')
+                        #     for local_fio in fios:
+                        #         preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        if fio.find(',') != -1:
                             fios = fio.split(',')
                             # print(fio, fios)
                             for local_fio in fios:
-                                if res.get(local_fio) != None:
-                                    res[local_fio] = add_lesson_to_prepod(res[local_fio], file.iloc[index, 0],
-                                                                          str(file.iloc[index, 1]),
-                                                                          str(file.iloc[index, 4]),
-                                                                          file.iloc[index, part + CFNG + 5],
-                                                                          file.iloc[index, part + CFNG + 6],
-                                                                          file.iloc[index, part + CFNG + 8],
-                                                                          file.columns[part + CFNG + 5])
-                                else:
-                                    res[local_fio] = {  # ФИО
-                                        file.iloc[index, 0]: {  # День недели
-                                            str(file.iloc[index, 1]): {  # Номер пары
-                                                str(file.iloc[index, 4]):  # Четность недель
-                                                    {
-                                                        'Предмет': file.iloc[index, part + CFNG + 5],
-                                                        'Вид занятий': file.iloc[index, part + CFNG + 6],
-                                                        'Аудитория': file.iloc[index, part + CFNG + 8],
-                                                        'Группа': file.columns[part + CFNG + 5]
-                                                    }
-                                            }
-                                        }
-                                    }
-                        else:
+                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        elif fio.find('\n\n') != -1:
                             fios = fio.split('\n\n')
                             for local_fio in fios:
-                                if res.get(local_fio) != None:
-                                    res[local_fio] = add_lesson_to_prepod(res[local_fio], file.iloc[index, 0],
-                                                                    str(file.iloc[index, 1]), str(file.iloc[index, 4]),
-                                                                    file.iloc[index, part + CFNG + 5],
-                                                                    file.iloc[index, part + CFNG + 6],
-                                                                    file.iloc[index, part + CFNG + 8],
-                                                                    file.columns[part + CFNG + 5])
-                                else:
-                                    res[local_fio] = {  # ФИО
-                                        file.iloc[index, 0]: {  # День недели
-                                            str(file.iloc[index, 1]): {  # Номер пары
-                                                str(file.iloc[index, 4]):  # Четность недель
-                                                    {
-                                                        'Предмет': file.iloc[index, part + CFNG + 5],
-                                                        'Вид занятий': file.iloc[index, part + CFNG + 6],
-                                                        'Аудитория': file.iloc[index, part + CFNG + 8],
-                                                        'Группа': file.columns[part + CFNG + 5]
-                                                    }
-                                            }
-                                        }
-                                    }
+                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        elif fio.find('\n') != -1:
+                            fios = fio.split('\n')
+                            for local_fio in fios:
+                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        else:
+                            preparate_one_prepod(file, res, fio, index, part, CFNG)
     return res
 
 def process(name):

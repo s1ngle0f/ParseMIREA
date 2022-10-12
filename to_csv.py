@@ -1,13 +1,15 @@
 import pandas as pd
 
 
+ONE_PART = 15
 END_LINE_IN_FILE = 85
+
 
 def fill_free_space(path):
     file = pd.read_csv(path)
     # print(type(file.iloc[0, 0]), file.iloc[0, 0])
     # print(file.iloc[:, 0])
-    for i in range(0, len(file.columns), 15):
+    for i in range(0, len(file.columns), ONE_PART):
         for col in range(0, 4):
             last_day = None
             n_col = i + col
