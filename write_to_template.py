@@ -75,8 +75,12 @@ def write(name):
 def write_all():
     for files in os.listdir('input'):
         write(files)
+
+    def get_sheets_title(sheet):
+        return sheet.title
+
     none_sort_wb = openpyxl.load_workbook('output/prepodi_result.xlsx')
-    none_sort_wb._sheets.sort()
+    none_sort_wb._sheets.sort(key=get_sheets_title)
     none_sort_wb.save('output/prepodi_result.xlsx')
 
 write_all()

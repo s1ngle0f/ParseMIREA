@@ -16,6 +16,10 @@ import pandas as pd
 #
 # print(file.columns[5])
 
+def get_sheets_title(workbook):
+    return workbook.title
+
 none_sort_wb = openpyxl.load_workbook('output/prepodi_result.xlsx')
 print(none_sort_wb._sheets[0].title)
-none_sort_wb._sheets.sort()
+none_sort_wb._sheets.sort(key=get_sheets_title)
+none_sort_wb.save('output/prepodi_result.xlsx')
