@@ -64,7 +64,7 @@ def preparate_data(file) -> dict:
             if fio_col < len(file.columns):
                 for index, fio in enumerate(file.iloc[:, fio_col]): # Проверить на наличие бага с совпадением расписания
                     if type(fio) == str and index > 0:
-                        if fio.find('\n\n') == -1:
+                        if fio.find('\n\n') == -1 and fio.find(',') == -1:
                             if res.get(fio) != None:
                                 res[fio] = add_lesson_to_prepod(res[fio], file.iloc[index, 0], str(file.iloc[index, 1]), str(file.iloc[index, 4]),
                                                     file.iloc[index, part + CFNG + 5], file.iloc[index, part + CFNG + 6], file.iloc[index, part + CFNG + 8], file.columns[part + CFNG + 5])
@@ -82,6 +82,32 @@ def preparate_data(file) -> dict:
                                         }
                                     }
                                 }
+                        elif fio.find(',') != -1:
+                            fios = fio.split(',')
+                            # print(fio, fios)
+                            for local_fio in fios:
+                                if res.get(local_fio) != None:
+                                    res[local_fio] = add_lesson_to_prepod(res[local_fio], file.iloc[index, 0],
+                                                                          str(file.iloc[index, 1]),
+                                                                          str(file.iloc[index, 4]),
+                                                                          file.iloc[index, part + CFNG + 5],
+                                                                          file.iloc[index, part + CFNG + 6],
+                                                                          file.iloc[index, part + CFNG + 8],
+                                                                          file.columns[part + CFNG + 5])
+                                else:
+                                    res[local_fio] = {  # ФИО
+                                        file.iloc[index, 0]: {  # День недели
+                                            str(file.iloc[index, 1]): {  # Номер пары
+                                                str(file.iloc[index, 4]):  # Четность недель
+                                                    {
+                                                        'Предмет': file.iloc[index, part + CFNG + 5],
+                                                        'Вид занятий': file.iloc[index, part + CFNG + 6],
+                                                        'Аудитория': file.iloc[index, part + CFNG + 8],
+                                                        'Группа': file.columns[part + CFNG + 5]
+                                                    }
+                                            }
+                                        }
+                                    }
                         else:
                             fios = fio.split('\n\n')
                             for local_fio in fios:

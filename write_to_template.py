@@ -67,14 +67,17 @@ def write(name):
                     ws[f'G{line_num}'] = k
                     ws[f'H{line_num}'] = info.get('Аудитория')
                     ws[f'I{line_num}'] = info.get('Группа')
-
     wb.save('output/prepodi_result.xlsx')
+
 # write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
 
 def write_all():
     for files in os.listdir('input'):
         write(files)
+    none_sort_wb = openpyxl.load_workbook('output/prepodi_result.xlsx')
+    none_sort_wb._sheets.sort()
+    none_sort_wb.save('output/prepodi_result.xlsx')
 
 write_all()
 
