@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 import openpyxl
+
+import process_the_file
 from process_the_file import process
 import copy_sheet
 
@@ -74,7 +76,12 @@ def write(name):
 
 def write_all():
     for files in os.listdir('input'):
-        write(files)
+        if files.find('ITU_mag') != -1:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 3
+            write(files)
+        else:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 2
+            write(files)
 
     def get_sheets_title(sheet):
         return sheet.title
