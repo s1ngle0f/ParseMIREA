@@ -35,12 +35,15 @@ def read_csv(name):
 def add_lesson_to_prepod(prepod: dict, weekday, num_of_lesson, chetnost, predmet, type_of_lesson, auditorium, group) -> dict:
     if prepod.get(weekday) != None:
         if prepod[weekday].get(num_of_lesson) != None: #ТУТ СДЕЛАТЬ ПРОВЕРКУ НА СОВПАДЕНИЕ ГРУПП!!!
-            prepod[weekday][num_of_lesson][chetnost] = {
-                    'Предмет': predmet,
-                    'Вид занятий': type_of_lesson,
-                    'Аудитория': auditorium,
-                    'Группа': group
-                }
+            if prepod[weekday][num_of_lesson].get(chetnost) == None:
+                prepod[weekday][num_of_lesson][chetnost] = {
+                        'Предмет': predmet,
+                        'Вид занятий': type_of_lesson,
+                        'Аудитория': auditorium,
+                        'Группа': group
+                    }
+            else:
+                prepod[weekday][num_of_lesson][chetnost]['Группа'] += f'\n{group}'
         else:
             prepod[weekday][num_of_lesson] = {
                 chetnost:
