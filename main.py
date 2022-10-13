@@ -1,9 +1,6 @@
-
-
-def print_hi(name):
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import write_to_template
 
 
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    write_to_template.write_all_prepods()
 

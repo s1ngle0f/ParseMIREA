@@ -74,7 +74,7 @@ def write(name):
 # write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
 
-def write_all():
+def write_all_prepods():
     for files in os.listdir('input'):
         if files.find('ITU_mag') != -1:
             process_the_file.COUNT_GROUPS_IN_ONE_PART = 3
@@ -90,5 +90,4 @@ def write_all():
     none_sort_wb._sheets.sort(key=get_sheets_title)
     none_sort_wb.save('output/prepodi_result.xlsx')
 
-write_all()
 
