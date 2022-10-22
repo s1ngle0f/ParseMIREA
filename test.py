@@ -24,8 +24,12 @@ import pandas as pd
 # none_sort_wb._sheets.sort(key=get_sheets_title)
 # none_sort_wb.save('output/prepodi_result.xlsx')
 
-# d = {'a': 21}
-#
+d = {'a': 21, 'b': 2135}
+
+del d['b']
+
+print(d)
+
 # def edit_d(d):
 #     d['a'] = 124
 #
@@ -36,10 +40,10 @@ import pandas as pd
 # 'Прилипко В.А.' \
 # 'Прилипко В.А.'
 
-file = pd.read_csv('csv/IIT_mag_2kurs_osen_2022_2023.csv')
-fios = file.iloc[59, 72]
-
-print(fios.split('\n'))
+# file = pd.read_csv('csv/IIT_mag_2kurs_osen_2022_2023.csv')
+# fios = file.iloc[59, 72]
+#
+# print(fios.split('\n'))
 
 
 

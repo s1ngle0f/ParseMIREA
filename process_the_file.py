@@ -91,7 +91,7 @@ def preparate_one_prepod(file, res, fio, index, part, CFNG):
         }
 
 
-def preparate_data(file) -> dict:
+def preparate_data_prepods(file) -> dict:
     res = {}
     for part in range(0, len(file.columns), ONE_PART):
         for CFNG in range(0, (COUNT_GROUPS_IN_ONE_PART-1)*COLS_BEETWEN_GROUPS+1, COLS_BEETWEN_GROUPS): #Корректор для сдвига для следующих учебных групп в одном паттерне расписания
@@ -127,7 +127,49 @@ def preparate_data(file) -> dict:
                             preparate_one_prepod(file, res, fio, index, part, CFNG)
     return res
 
-def process(name):
+def process_prepods(name):
     file = read_csv(name)
-    return preparate_data(file)
+    return preparate_data_prepods(file)
 # pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))
+
+#
+def convert_prepods_to_auditory(prepods: dict):
+    res = {}
+    for name, weekdays in prepods.items():
+        for weekday, lessons in weekdays.items():
+            for num_lesson, chetnosti in lessons.items():
+                for chet_nechet, content in chetnosti.items():
+                    if type(content.get('Аудитория')) != float:
+                        if content.get('Аудитория').find(',') != -1:
+                            audis = content.get('Аудитория').split(',')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        elif content.get('Аудитория').find('\n\n') != -1:
+                            audis = content.get('Аудитория').split('\n\n')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        elif content.get('Аудитория').find('\n') != -1:
+                            audis = content.get('Аудитория').split('\n')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        else:
+                            if res.get(content.get('Аудитория')) == None:
+                                res[content.get('Аудитория')] = []
+                            res[content.get('Аудитория')].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+    return res
+
+
+
+
+
+
+
+
+
+
