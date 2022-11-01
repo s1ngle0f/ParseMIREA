@@ -24,11 +24,21 @@ import pandas as pd
 # none_sort_wb._sheets.sort(key=get_sheets_title)
 # none_sort_wb.save('output/prepodi_result.xlsx')
 
-d = {'a': 21, 'b': 2135}
+# d = {'a': 21, 'b': 2135}
+#
+# del d['b']
+#
+# print(d)
 
-del d['b']
+def find_first_upper_symbol(string: str):
+    for i, char in enumerate(string):
+        if char.isupper():
+            return i
+    return -1
 
-print(d)
+s = 'ASdsdАрхитектура интеграции и развертывания'
+print(s.split('\n'))
+print(s[find_first_upper_symbol(s):])
 
 # def edit_d(d):
 #     d['a'] = 124

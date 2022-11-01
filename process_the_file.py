@@ -143,56 +143,73 @@ def convert_prepods_to_auditory(prepods: dict):
                         if content.get('Аудитория').find(',') != -1:
                             audis = content.get('Аудитория').split(',')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    if res.get(auditory) == None:
+                                        res[auditory] = []
+                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get('Аудитория').find('\n\n') != -1:
                             audis = content.get('Аудитория').split('\n\n')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    if res.get(auditory) == None:
+                                        res[auditory] = []
+                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get('Аудитория').find('\n') != -1:
                             audis = content.get('Аудитория').split('\n')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    if res.get(auditory) == None:
+                                        res[auditory] = []
+                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         else:
                             if res.get(content.get('Аудитория')) == None:
                                 res[content.get('Аудитория')] = []
                             res[content.get('Аудитория')].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
     return res
 
-def convert_prepods_to(prepods: dict, col_name):
+def find_first_upper_symbol(string: str):
+    for i, char in enumerate(string):
+        if char.isupper():
+            return i
+    return 0
+
+def convert_prepods_to(prepods: dict, col_name: str):
     res = {}
     for name, weekdays in prepods.items():
         for weekday, lessons in weekdays.items():
             for num_lesson, chetnosti in lessons.items():
                 for chet_nechet, content in chetnosti.items():
                     if type(content.get(col_name)) != float:
+                        # _col_name = content.get(col_name)[find_first_upper_symbol(content.get(col_name)):]
                         if content.get(col_name).find(',') != -1:
                             audis = content.get(col_name).split(',')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    _auditory = auditory[find_first_upper_symbol(auditory):]
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get(col_name).find('\n\n') != -1:
                             audis = content.get(col_name).split('\n\n')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    _auditory = auditory[find_first_upper_symbol(auditory):]
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get(col_name).find('\n') != -1:
                             audis = content.get(col_name).split('\n')
                             for auditory in audis:
-                                if res.get(auditory) == None:
-                                    res[auditory] = []
-                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                if auditory != '':
+                                    _auditory = auditory[find_first_upper_symbol(auditory):]
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         else:
-                            if res.get(content.get(col_name)) == None:
-                                res[content.get(col_name)] = []
-                            res[content.get(col_name)].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                            _auditory = content.get(col_name)[find_first_upper_symbol(content.get(col_name)):]
+                            if res.get(_auditory) == None:
+                                res[_auditory] = []
+                            res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
     return res
 
 
