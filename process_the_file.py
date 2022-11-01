@@ -164,6 +164,36 @@ def convert_prepods_to_auditory(prepods: dict):
                             res[content.get('Аудитория')].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
     return res
 
+def convert_prepods_to(prepods: dict, col_name):
+    res = {}
+    for name, weekdays in prepods.items():
+        for weekday, lessons in weekdays.items():
+            for num_lesson, chetnosti in lessons.items():
+                for chet_nechet, content in chetnosti.items():
+                    if type(content.get(col_name)) != float:
+                        if content.get(col_name).find(',') != -1:
+                            audis = content.get(col_name).split(',')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        elif content.get(col_name).find('\n\n') != -1:
+                            audis = content.get(col_name).split('\n\n')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        elif content.get(col_name).find('\n') != -1:
+                            audis = content.get(col_name).split('\n')
+                            for auditory in audis:
+                                if res.get(auditory) == None:
+                                    res[auditory] = []
+                                res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                        else:
+                            if res.get(content.get(col_name)) == None:
+                                res[content.get(col_name)] = []
+                            res[content.get(col_name)].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+    return res
 
 
 

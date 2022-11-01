@@ -97,6 +97,7 @@ def write_auditory(name):
     template = openpyxl.load_workbook('templates/pattern_prepod.xlsx')['Шаблон']
 
     for auditory_name, prepods in preparated_data.items():
+        # print(auditory_name, prepods)
         if type(auditory_name) != float:
             k = auditory_name.replace('/', ' ')
             try:
@@ -137,3 +138,62 @@ def write_all_auditories():
     none_sort_wb._sheets.sort(key=get_sheets_title)
     none_sort_wb.save('output/auditory_result.xlsx')
 
+########################################################################
+
+def write_lesson(name):
+    preparated_data_prepods = process_prepods(name)
+    preparated_data = process_the_file.convert_prepods_to(preparated_data_prepods, 'Предмет')
+    # pprint.pprint(preparated_data)
+    try:
+        wb = openpyxl.load_workbook('output/lesson_result.xlsx')
+    except:
+        wb = openpyxl.Workbook()
+
+        # Удаление листа, создаваемого по умолчанию, при создании документа
+        for sheet_name in wb.sheetnames:
+            sheet = wb.get_sheet_by_name(sheet_name)
+            wb.remove_sheet(sheet)
+
+    template = openpyxl.load_workbook('templates/pattern_prepod.xlsx')['Шаблон']
+
+    for auditory_name, prepods in preparated_data.items():
+        # print(auditory_name, prepods)
+        if type(auditory_name) != float:
+            k = auditory_name.replace('/', ' ')
+            try:
+                ws = wb.get_sheet_by_name(k)
+            except:
+                ws = wb.create_sheet(k)
+                copy_sheet.copy_sheet(template, ws)
+            for prepod_content in prepods:
+                for fio, v in prepod_content.items():
+                    for weekday, lessons in v.items():
+                        for num_lesson, chetnost in lessons.items():
+                            for num_chetnost, info in chetnost.items():
+                                # print(k, weekday, num_lesson, num_chetnost, info)
+                                line_num = 4+weekdays.get(weekday)*16+(int(num_lesson)-1)*2+parity.get(num_chetnost)
+                                ws[f'E{line_num}'] = info.get('Предмет')
+                                ws[f'F{line_num}'] = info.get('Вид занятий')
+                                ws[f'G{line_num}'] = fio
+                                ws[f'H{line_num}'] = info.get('Аудитория')
+                                ws[f'I{line_num}'] = info.get('Группа')
+    wb.save('output/lesson_result.xlsx')
+
+# write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
+
+
+def write_all_lessons():
+    for files in os.listdir('input'):
+        if files.find('ITU_mag') != -1:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 3
+            write_lesson(files)
+        else:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 2
+            write_lesson(files)
+
+    def get_sheets_title(sheet):
+        return sheet.title
+
+    none_sort_wb = openpyxl.load_workbook('output/lesson_result.xlsx')
+    none_sort_wb._sheets.sort(key=get_sheets_title)
+    none_sort_wb.save('output/lesson_result.xlsx')
