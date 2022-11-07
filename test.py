@@ -40,6 +40,22 @@ s = 'ASdsdАрхитектура интеграции и развертыван�
 print(s.split('\n'))
 print(s[find_first_upper_symbol(s):])
 
+aud = 'ауд. G-234 (B-78)'
+aud1 = 'комп. G-234 (B-78)'
+aud0 = 'G-234'
+
+def get_clear_auditory(auditory: str):
+    if auditory.find('(') != -1:
+        auditory = auditory[:auditory.find('(')-1]
+    if auditory.find('ауд. ') != -1:
+        auditory = auditory[auditory.find('ауд. ')+5:]
+    if auditory.find('комп. ') != -1:
+        auditory = auditory[auditory.find('комп. ')+6:]
+    return auditory
+
+print(get_clear_auditory(aud))
+print(get_clear_auditory(aud0))
+print(get_clear_auditory(aud1))
 # def edit_d(d):
 #     d['a'] = 124
 #

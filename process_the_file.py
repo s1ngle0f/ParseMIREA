@@ -132,7 +132,18 @@ def process_prepods(name):
     return preparate_data_prepods(file)
 # pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))
 
-#
+def get_clear_auditory(auditory: str):
+    if auditory.find('(') != -1:
+        auditory = auditory[:auditory.find('(')-1]
+    if auditory.find('ауд. ') != -1:
+        auditory = auditory[auditory.find('ауд. ')+5:]
+    if auditory.find('лаб. ') != -1:
+        auditory = auditory[auditory.find('лаб. ') + 5:]
+    if auditory.find('комп. ') != -1:
+        auditory = auditory[auditory.find('ауд. ')+6:]
+    return auditory
+
+
 def convert_prepods_to_auditory(prepods: dict):
     res = {}
     for name, weekdays in prepods.items():
@@ -144,27 +155,31 @@ def convert_prepods_to_auditory(prepods: dict):
                             audis = content.get('Аудитория').split(',')
                             for auditory in audis:
                                 if auditory != '':
-                                    if res.get(auditory) == None:
-                                        res[auditory] = []
-                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                    _auditory = get_clear_auditory(auditory)
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get('Аудитория').find('\n\n') != -1:
                             audis = content.get('Аудитория').split('\n\n')
                             for auditory in audis:
                                 if auditory != '':
-                                    if res.get(auditory) == None:
-                                        res[auditory] = []
-                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                    _auditory = get_clear_auditory(auditory)
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         elif content.get('Аудитория').find('\n') != -1:
                             audis = content.get('Аудитория').split('\n')
                             for auditory in audis:
                                 if auditory != '':
-                                    if res.get(auditory) == None:
-                                        res[auditory] = []
-                                    res[auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                                    _auditory = get_clear_auditory(auditory)
+                                    if res.get(_auditory) == None:
+                                        res[_auditory] = []
+                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
                         else:
-                            if res.get(content.get('Аудитория')) == None:
-                                res[content.get('Аудитория')] = []
-                            res[content.get('Аудитория')].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+                            _auditory = get_clear_auditory(content.get('Аудитория'))
+                            if res.get(_auditory) == None:
+                                res[_auditory] = []
+                            res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
     return res
 
 def find_first_upper_symbol(string: str):
