@@ -29,33 +29,37 @@ import pandas as pd
 # del d['b']
 #
 # print(d)
-
-def find_first_upper_symbol(string: str):
-    for i, char in enumerate(string):
-        if char.isupper():
-            return i
-    return -1
-
-s = 'ASdsdАрхитектура интеграции и развертывания'
-print(s.split('\n'))
-print(s[find_first_upper_symbol(s):])
-
-aud = 'ауд. G-234 (B-78)'
-aud1 = 'комп. G-234 (B-78)'
-aud0 = 'G-234'
-
-def get_clear_auditory(auditory: str):
-    if auditory.find('(') != -1:
-        auditory = auditory[:auditory.find('(')-1]
-    if auditory.find('ауд. ') != -1:
-        auditory = auditory[auditory.find('ауд. ')+5:]
-    if auditory.find('комп. ') != -1:
-        auditory = auditory[auditory.find('комп. ')+6:]
-    return auditory
-
-print(get_clear_auditory(aud))
-print(get_clear_auditory(aud0))
-print(get_clear_auditory(aud1))
+###################################
+from process_the_file import *
+#
+#
+# def find_first_upper_symbol(string: str):
+#     for i, char in enumerate(string):
+#         if char.isupper():
+#             return i
+#     return -1
+#
+# s = 'ASdsdАрхитектура интеграции и развертывания'
+# print(s.split('\n'))
+# print(s[find_first_upper_symbol(s):])
+#
+# aud = 'ауд. G-234 (B-78)'
+# aud1 = 'комп. G-234 (B-78)'
+# aud0 = 'G-234'
+#
+# def get_clear_auditory(auditory: str):
+#     if auditory.find('(') != -1:
+#         auditory = auditory[:auditory.find('(')-1]
+#     if auditory.find('ауд. ') != -1:
+#         auditory = auditory[auditory.find('ауд. ')+5:]
+#     if auditory.find('комп. ') != -1:
+#         auditory = auditory[auditory.find('комп. ')+6:]
+#     return auditory
+#
+# print(get_clear_auditory(aud))
+# print(get_clear_auditory(aud0))
+# print(get_clear_auditory(aud1))
+####################################
 # def edit_d(d):
 #     d['a'] = 124
 #
@@ -71,13 +75,25 @@ print(get_clear_auditory(aud1))
 #
 # print(fios.split('\n'))
 
+# for files in os.listdir('input'):
+#     print(files)
+# pprint.pprint(process_the_file.get_by("ФИО", process_the_file.process('зач_ИИТ_3 курс_22-23_осень.csv')))
 
+# print(process_the_file.get_clear_fio("Пяткин В.В."))
+# print("Пяткин В.В."[0:1])
 
+def split_fios(fio):
+    while get_n_upper_symbol(fio) > 0:
+        print(fio[:find_n_upper_symbol(fio, 2) + 2])
+        fio = fio[find_n_upper_symbol(fio, 2) + 2:]
 
+split_fios("Мильчакова Н.Е.")
+# print("Мильчакова Н.Е.\nМочаловаЛ.В.")
 
-
-
-
+# ban_symbols = [',', '\n\n', '\n', ', ']
+#
+# if not any(ban_symbol in "Мильчакова Н.Е.\n\nМочаловаЛ.В." for ban_symbol in ban_symbols):
+#     print('Success')
 
 
 

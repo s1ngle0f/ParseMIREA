@@ -3,9 +3,9 @@ import pprint
 
 import pandas as pd
 import openpyxl
-
+from openpyxl.styles import PatternFill
 import process_the_file
-from process_the_file import process_prepods
+from process_the_file import process, get_by, process_dirty
 import copy_sheet
 
 
@@ -24,11 +24,13 @@ parity = {
     'II': 1
 }
 
+ban_symbols = [',', '\n\n', '\n', ', ']
 
-def write_prepod(name):
-    preparated_data = process_prepods(name)
+def write(sort_by, name, result_filename):
+    # preparated_data = get_by(sort_by, process(name))
+    preparated_data = get_by(sort_by, process_dirty(name))
     try:
-        wb = openpyxl.load_workbook('output/prepodi_result.xlsx')
+        wb = openpyxl.load_workbook(f'output/{result_filename}.xlsx')
     except:
         wb = openpyxl.Workbook()
 
@@ -39,44 +41,46 @@ def write_prepod(name):
 
     template = openpyxl.load_workbook('templates/pattern_prepod.xlsx')['Шаблон']
 
-    for fio, v in preparated_data.items():
-        k = fio.replace('/', ' ')
+    for key, val in preparated_data.items():
+        k = key.replace('/', ' ')
         try:
             ws = wb.get_sheet_by_name(k)
         except:
             ws = wb.create_sheet(k)
             copy_sheet.copy_sheet(template, ws)
 
-        for weekday, lessons in v.items():
-            for num_lesson, chetnost in lessons.items():
-                for num_chetnost, info in chetnost.items():
-                    # print(k, weekday, num_lesson, num_chetnost, info)
-                    line_num = 4+weekdays.get(weekday)*16+(int(num_lesson)-1)*2+parity.get(num_chetnost)
-                    ws[f'E{line_num}'] = info.get('Предмет')
-                    ws[f'F{line_num}'] = info.get('Вид занятий')
-                    ws[f'G{line_num}'] = k
-                    ws[f'H{line_num}'] = info.get('Аудитория')
-                    ws[f'I{line_num}'] = info.get('Группа')
-    wb.save('output/prepodi_result.xlsx')
+        for info in val:
+            # print(k, weekday, num_lesson, num_chetnost, info)
+            line_num = 4+weekdays.get(info.get('День недели'))*16+(int(info.get('Номер пары'))-1)*2+parity.get(info.get('Четность недели'))
+            ws[f'E{line_num}'] = info.get('Предмет')
+            ws[f'F{line_num}'] = info.get('Вид занятий')
+            ws[f'G{line_num}'] = info.get('ФИО')
+            ws[f'H{line_num}'] = info.get('Аудитория')
+            ws[f'I{line_num}'] = info.get('Группа')
+
+            if any(ban_symbol in info.get('ФИО') for ban_symbol in ban_symbols):#Только для определения коллизий ФИО
+                ws[f'J{line_num}'].fill = PatternFill(start_color="ff0000", end_color="ff0000", fill_type="solid")
+
+    wb.save(f'output/{result_filename}.xlsx')
 
 # write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
 
-def write_all_prepods():
+def write_all(sort_by, result_filename):
     for files in os.listdir('input'):
         if files.find('ITU_mag') != -1:
             process_the_file.COUNT_GROUPS_IN_ONE_PART = 3
-            write_prepod(files)
+            write(sort_by, files, result_filename)
         else:
             process_the_file.COUNT_GROUPS_IN_ONE_PART = 2
-            write_prepod(files)
+            write(sort_by, files, result_filename)
 
     def get_sheets_title(sheet):
         return sheet.title
 
-    none_sort_wb = openpyxl.load_workbook('output/prepodi_result.xlsx')
+    none_sort_wb = openpyxl.load_workbook(f'output/{result_filename}.xlsx')
     none_sort_wb._sheets.sort(key=get_sheets_title)
-    none_sort_wb.save('output/prepodi_result.xlsx')
+    none_sort_wb.save(f'output/{result_filename}.xlsx')
 
 ########################################################################
 

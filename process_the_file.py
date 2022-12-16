@@ -2,7 +2,7 @@ import pprint
 
 import pandas as pd
 import to_csv
-
+import re
 
 ONE_PART = 15
 COUNT_GROUPS_IN_ONE_PART = 2
@@ -15,223 +15,180 @@ AUDITORIUM_COL = 8
 GROUP_COL = 5
 
 def read_csv(name):
-    to_csv.create_csv_from_excel(name)
-    path = f'csv/{name.replace(".xlsx", ".csv")}' if name.find('.xlsx') else f'csv/{name}'
+    if name.find('.xlsx') != -1:
+        path = f'csv/{name.replace(".xlsx", ".csv")}'
+        to_csv.create_csv_from_excel(name)
+    else:
+        path = f'csv/{name}'
+    print(path)
     return pd.read_csv(path)
 # print(read_csv('IIT_3-kurs_22_23_osen_07.10.2022_non_processed.csv').head(10))
 
-
-# Пример одного преподавателя из массива
-# { 'Зубков М. В.': {
-#   'ПОНЕДЕЛЬНИК': {
-#       '1': {
-#           '|': {'Предмет': 'Моделирование', 'Вид занятий': 'пр', 'Аудитория': 'Г-227-2', 'Группа': 'ИКБО-30-20'},
-#           '||': {'Предмет': 'Моделирование', 'Вид занятий': 'пр', 'Аудитория': 'Г-227-2', 'Группа': 'ИКБО-30-20'} #Не обязательно, тк может быть либо одно, либо другое
-#       }
-#   }
-# }}
-
-
-def add_lesson_to_prepod(prepod: dict, weekday, num_of_lesson, chetnost, predmet, type_of_lesson, auditorium, group) -> dict:
-    if prepod.get(weekday) != None:
-        if prepod[weekday].get(num_of_lesson) != None: #ТУТ СДЕЛАТЬ ПРОВЕРКУ НА СОВПАДЕНИЕ ГРУПП!!!
-            if prepod[weekday][num_of_lesson].get(chetnost) == None:
-                prepod[weekday][num_of_lesson][chetnost] = {
-                        'Предмет': predmet,
-                        'Вид занятий': type_of_lesson,
-                        'Аудитория': auditorium,
-                        'Группа': group
-                    }
-            else:
-                prepod[weekday][num_of_lesson][chetnost]['Группа'] += f'\n{group}'
-        else:
-            prepod[weekday][num_of_lesson] = {
-                chetnost:
-                    {
-                        'Предмет': predmet,
-                        'Вид занятий': type_of_lesson,
-                        'Аудитория': auditorium,
-                        'Группа': group
-                    }
-            }
-    else:
-        prepod[weekday] = {
-            num_of_lesson: {
-                chetnost:
-                    {
-                        'Предмет': predmet,
-                        'Вид занятий': type_of_lesson,
-                        'Аудитория': auditorium,
-                        'Группа': group
-                    }
-            }
-        }
-    return prepod
-
-
-def preparate_one_prepod(file, res, fio, index, part, CFNG):
-    if res.get(fio) != None:
-        res[fio] = add_lesson_to_prepod(res[fio], file.iloc[index, 0], str(file.iloc[index, 1]),
-                                        str(file.iloc[index, CHETNOST_COL]),
-                                        file.iloc[index, part + CFNG + PREDMET_COL], file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
-                                        file.iloc[index, part + CFNG + AUDITORIUM_COL], file.columns[part + CFNG + GROUP_COL])
-    else:
-        res[fio] = {  # ФИО
-            file.iloc[index, 0]: {  # День недели
-                str(file.iloc[index, 1]): {  # Номер пары
-                    str(file.iloc[index, CHETNOST_COL]):  # Четность недель
-                        {
-                            'Предмет': file.iloc[index, part + CFNG + PREDMET_COL],
-                            'Вид занятий': file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
-                            'Аудитория': file.iloc[index, part + CFNG + AUDITORIUM_COL],
-                            'Группа': file.columns[part + CFNG + GROUP_COL]
-                        }
-                }
-            }
-        }
-
-
-def preparate_data_prepods(file) -> dict:
+def get_by(sort_name, arr):
     res = {}
+    # for i, el in enumerate(arr):
+    #     if res.get(el.get(sort_name)) == None:
+    #         res[el.get(sort_name)] = []
+    #     res[el.get(sort_name)].append(el)
+    #     # del res[el.get(sort_name)][-1][sort_name]
+    ban_symbols = [',', '\n\n', '\n', ', ']
+    for i, el in enumerate(arr):
+        for ban_symbol in ban_symbols:
+            if ban_symbol in el.get(sort_name):
+                # names = el.get(sort_name).split(ban_symbol)
+                names = re.split(",|\n\n|\n|, ", el.get(sort_name))
+                for name in names:
+                    if res.get(get_clear_fio(name)) == None:
+                        res[get_clear_fio(name)] = []
+                    res[get_clear_fio(name)].append(el)
+        if not any(ban_symbol in el.get(sort_name) for ban_symbol in ban_symbols):
+            if res.get(get_clear_fio(el.get(sort_name))) == None:
+                res[get_clear_fio(el.get(sort_name))] = []
+            res[get_clear_fio(el.get(sort_name))].append(el)
+    return res
+
+def add_to_proccess_result(res, fio, weekday, num_of_lesson, chetnost, lesson, vid_zanyatiy, auditory, group):
+    res.append({
+        'ФИО': fio,
+        'День недели': weekday,
+        'Номер пары': num_of_lesson,
+        'Четность недели': chetnost,
+        'Предмет': lesson,
+        'Вид занятий': vid_zanyatiy,
+        'Аудитория': auditory,
+        'Группа': group
+    })
+
+def process(name):
+    file = read_csv(name)
+    res = []
+    ban_symbols = [',', '\n\n', '\n', ', ']
     for part in range(0, len(file.columns), ONE_PART):
         for CFNG in range(0, (COUNT_GROUPS_IN_ONE_PART-1)*COLS_BEETWEN_GROUPS+1, COLS_BEETWEN_GROUPS): #Корректор для сдвига для следующих учебных групп в одном паттерне расписания
             fio_col = part + CFNG + FIO_COL
             if fio_col < len(file.columns):
                 for index, fio in enumerate(file.iloc[:, fio_col]): # Проверить на наличие бага с совпадением расписания
                     if type(fio) == str and index > 0:
-                        # if fio.find('\n\n') == -1 and fio.find(',') == -1:
-                        #     preparate_one_prepod(file, res, fio, index, part, CFNG)
-                        # elif fio.find(',') != -1:
-                        #     fios = fio.split(',')
-                        #     # print(fio, fios)
-                        #     for local_fio in fios:
-                        #         preparate_one_prepod(file, res, local_fio, index, part, CFNG)
+                        for ban_symbol in ban_symbols:
+                            if ban_symbol in fio:
+                                fios = fio.split(ban_symbol)
+                                for local_fio in fios:
+                                    add_to_proccess_result(res=res,
+                                       fio=get_clear_fio(local_fio),
+                                       # fio=fio,
+                                       weekday=str(file.iloc[index, 0]),
+                                       num_of_lesson=str(file.iloc[index, 1]),
+                                       chetnost=str(file.iloc[index, CHETNOST_COL]),
+                                       lesson=file.iloc[index, part + CFNG + PREDMET_COL],
+                                       vid_zanyatiy=file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                                       auditory=get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                                       group=file.columns[part + CFNG + GROUP_COL]
+                                   )
+                        if not any(ban_symbol in fio for ban_symbol in ban_symbols):
+                            # print(f'Одна фамилия! {fio}')
+                            add_to_proccess_result(res = res,
+                                fio = get_clear_fio(fio),
+                                weekday = str(file.iloc[index, 0]),
+                                num_of_lesson = str(file.iloc[index, 1]),
+                                chetnost = str(file.iloc[index, CHETNOST_COL]),
+                                lesson = file.iloc[index, part + CFNG + PREDMET_COL],
+                                vid_zanyatiy = file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                                auditory = get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                                group = file.columns[part + CFNG + GROUP_COL]
+                            )
+                        #     while get_n_upper_symbol(fio) > 0:
+                        #         add_to_proccess_result(res=res,
+                        #                                fio=get_clear_fio(fio[:find_n_upper_symbol(fio, 2) + 2]),
+                        #                                weekday=str(file.iloc[index, 0]),
+                        #                                num_of_lesson=str(file.iloc[index, 1]),
+                        #                                chetnost=str(file.iloc[index, CHETNOST_COL]),
+                        #                                lesson=file.iloc[index, part + CFNG + PREDMET_COL],
+                        #                                vid_zanyatiy=file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                        #                                auditory=get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                        #                                group=file.columns[part + CFNG + GROUP_COL]
+                        #                                )
+                        #         fio = fio[find_n_upper_symbol(fio, 2) + 2:]
                         # else:
-                        #     fios = fio.split('\n\n')
-                        #     for local_fio in fios:
-                        #         preparate_one_prepod(file, res, local_fio, index, part, CFNG)
-                        if fio.find(',') != -1:
-                            fios = fio.split(',')
-                            # print(fio, fios)
-                            for local_fio in fios:
-                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
-                        elif fio.find('\n\n') != -1:
-                            fios = fio.split('\n\n')
-                            for local_fio in fios:
-                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
-                        elif fio.find('\n') != -1:
-                            fios = fio.split('\n')
-                            for local_fio in fios:
-                                preparate_one_prepod(file, res, local_fio, index, part, CFNG)
-                        else:
-                            preparate_one_prepod(file, res, fio, index, part, CFNG)
+                        #     print(f'Много фамилий! {fio}')
     return res
-
-def process_prepods(name):
-    file = read_csv(name)
-    return preparate_data_prepods(file)
 # pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))
 
+def get_clear_fio(fio: str):
+    fio = fio.replace(' ', '')
+    return f'{fio[:find_n_upper_symbol(fio, 1)]} {fio[find_n_upper_symbol(fio, 1):]}'
+
 def get_clear_auditory(auditory: str):
-    if auditory.find('(') != -1:
-        auditory = auditory[:auditory.find('(')-1]
-    if auditory.find('ауд. ') != -1:
-        auditory = auditory[auditory.find('ауд. ')+5:]
-    if auditory.find('лаб. ') != -1:
-        auditory = auditory[auditory.find('лаб. ') + 5:]
-    if auditory.find('комп. ') != -1:
-        auditory = auditory[auditory.find('ауд. ')+6:]
+    # if auditory.find('(') != -1:
+    #     auditory = auditory[:auditory.find('(')-1]
+    ban_symbols = ['ауд. ', 'лаб. ', 'комп. ', '(В-78)']
+    for ban_symbol in ban_symbols:
+        if ban_symbol in auditory:
+            auditory.replace(ban_symbol, '')
     return auditory
 
-
-def convert_prepods_to_auditory(prepods: dict):
-    res = {}
-    for name, weekdays in prepods.items():
-        for weekday, lessons in weekdays.items():
-            for num_lesson, chetnosti in lessons.items():
-                for chet_nechet, content in chetnosti.items():
-                    if type(content.get('Аудитория')) != float:
-                        if content.get('Аудитория').find(',') != -1:
-                            audis = content.get('Аудитория').split(',')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = get_clear_auditory(auditory)
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        elif content.get('Аудитория').find('\n\n') != -1:
-                            audis = content.get('Аудитория').split('\n\n')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = get_clear_auditory(auditory)
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        elif content.get('Аудитория').find('\n') != -1:
-                            audis = content.get('Аудитория').split('\n')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = get_clear_auditory(auditory)
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        else:
-                            _auditory = get_clear_auditory(content.get('Аудитория'))
-                            if res.get(_auditory) == None:
-                                res[_auditory] = []
-                            res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-    return res
-
-def find_first_upper_symbol(string: str):
+def get_n_upper_symbol(string: str):
+    counter = 0
     for i, char in enumerate(string):
         if char.isupper():
-            return i
+            counter += 1
+    return counter
+
+def find_n_upper_symbol(string: str, n: int = 0):
+    counter = 0
+    for i, char in enumerate(string):
+        if char.isupper():
+            if n == counter:
+                return i
+            else:
+                counter += 1
     return 0
 
-def convert_prepods_to(prepods: dict, col_name: str):
-    res = {}
-    for name, weekdays in prepods.items():
-        for weekday, lessons in weekdays.items():
-            for num_lesson, chetnosti in lessons.items():
-                for chet_nechet, content in chetnosti.items():
-                    if type(content.get(col_name)) != float:
-                        # _col_name = content.get(col_name)[find_first_upper_symbol(content.get(col_name)):]
-                        if content.get(col_name).find(',') != -1:
-                            audis = content.get(col_name).split(',')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = auditory[find_first_upper_symbol(auditory):]
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        elif content.get(col_name).find('\n\n') != -1:
-                            audis = content.get(col_name).split('\n\n')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = auditory[find_first_upper_symbol(auditory):]
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        elif content.get(col_name).find('\n') != -1:
-                            audis = content.get(col_name).split('\n')
-                            for auditory in audis:
-                                if auditory != '':
-                                    _auditory = auditory[find_first_upper_symbol(auditory):]
-                                    if res.get(_auditory) == None:
-                                        res[_auditory] = []
-                                    res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
-                        else:
-                            _auditory = content.get(col_name)[find_first_upper_symbol(content.get(col_name)):]
-                            if res.get(_auditory) == None:
-                                res[_auditory] = []
-                            res[_auditory].append({name: {weekday: {num_lesson: {chet_nechet: content}}}})
+def process_dirty(name):
+    file = read_csv(name)
+    res = []
+    ban_symbols = [',', '\n\n', '\n', ', ']
+    for part in range(0, len(file.columns), ONE_PART):
+        for CFNG in range(0, (COUNT_GROUPS_IN_ONE_PART-1)*COLS_BEETWEN_GROUPS+1, COLS_BEETWEN_GROUPS): #Корректор для сдвига для следующих учебных групп в одном паттерне расписания
+            fio_col = part + CFNG + FIO_COL
+            if fio_col < len(file.columns):
+                for index, fio in enumerate(file.iloc[:, fio_col]): # Проверить на наличие бага с совпадением расписания
+                    if type(fio) == str and index > 0:
+                        add_to_proccess_result(res=res,
+                           # fio=get_clear_fio(local_fio),
+                           fio=fio,
+                           weekday=str(file.iloc[index, 0]),
+                           num_of_lesson=str(file.iloc[index, 1]),
+                           chetnost=str(file.iloc[index, CHETNOST_COL]),
+                           lesson=file.iloc[index, part + CFNG + PREDMET_COL],
+                           vid_zanyatiy=file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                           auditory=get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                           group=file.columns[part + CFNG + GROUP_COL]
+                        )
+                        if not any(ban_symbol in fio for ban_symbol in ban_symbols):
+                            # print(f'Одна фамилия! {fio}')
+                            add_to_proccess_result(res = res,
+                                fio = get_clear_fio(fio),
+                                weekday = str(file.iloc[index, 0]),
+                                num_of_lesson = str(file.iloc[index, 1]),
+                                chetnost = str(file.iloc[index, CHETNOST_COL]),
+                                lesson = file.iloc[index, part + CFNG + PREDMET_COL],
+                                vid_zanyatiy = file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                                auditory = get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                                group = file.columns[part + CFNG + GROUP_COL]
+                            )
+                        #     while get_n_upper_symbol(fio) > 0:
+                        #         add_to_proccess_result(res=res,
+                        #                                fio=get_clear_fio(fio[:find_n_upper_symbol(fio, 2) + 2]),
+                        #                                weekday=str(file.iloc[index, 0]),
+                        #                                num_of_lesson=str(file.iloc[index, 1]),
+                        #                                chetnost=str(file.iloc[index, CHETNOST_COL]),
+                        #                                lesson=file.iloc[index, part + CFNG + PREDMET_COL],
+                        #                                vid_zanyatiy=file.iloc[index, part + CFNG + TYPE_OF_LESSON_COL],
+                        #                                auditory=get_clear_auditory(file.iloc[index, part + CFNG + AUDITORIUM_COL]),
+                        #                                group=file.columns[part + CFNG + GROUP_COL]
+                        #                                )
+                        #         fio = fio[find_n_upper_symbol(fio, 2) + 2:]
+                        # else:
+                        #     print(f'Много фамилий! {fio}')
     return res
-
-
-
-
-
-
-
-
-
+# pprint.pprint(process('IIT_3-kurs_22_23_osen_07.10.2022.xlsx'))
