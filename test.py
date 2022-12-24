@@ -2,7 +2,7 @@ import os
 import pprint
 import openpyxl
 import pandas as pd
-
+import re
 
 # file = pd.read_csv('csv/IIT_mag_2kurs_osen_2022_2023.csv')
 # dic = {}
@@ -30,7 +30,7 @@ import pandas as pd
 #
 # print(d)
 ###################################
-from process_the_file import *
+# from process_the_file import *
 #
 #
 # def find_first_upper_symbol(string: str):
@@ -82,12 +82,13 @@ from process_the_file import *
 # print(process_the_file.get_clear_fio("Пяткин В.В."))
 # print("Пяткин В.В."[0:1])
 
-def split_fios(fio):
-    while get_n_upper_symbol(fio) > 0:
-        print(fio[:find_n_upper_symbol(fio, 2) + 2])
-        fio = fio[find_n_upper_symbol(fio, 2) + 2:]
+# def split_fios(fio):
+#     while get_n_upper_symbol(fio) > 0:
+#         print(fio[:find_n_upper_symbol(fio, 2) + 2])
+#         fio = fio[find_n_upper_symbol(fio, 2) + 2:]
+#
+# split_fios("Мильчакова Н.Е.")
 
-split_fios("Мильчакова Н.Е.")
 # print("Мильчакова Н.Е.\nМочаловаЛ.В.")
 
 # ban_symbols = [',', '\n\n', '\n', ', ']
@@ -95,6 +96,22 @@ split_fios("Мильчакова Н.Е.")
 # if not any(ban_symbol in "Мильчакова Н.Е.\n\nМочаловаЛ.В." for ban_symbol in ban_symbols):
 #     print('Success')
 
+# s = 'ИКБО-30-20'
+#
+# pattern = re.compile("[А-Я]{4}-[0-9]{2}-[0-9]{2}")
+# res = pattern.search(s)
+#
+# print(type(pattern))
+# print(res)
 
+# file = pd.read_csv('csv/IIT_1-kurs_2022_2023_zima (1).csv')
+# fios = file.iloc[0, :10]
+#
+# print(fios.iloc[10, :])
+import process_the_file
 
+file = process_the_file.process_exams('IIT_1-kurs_2022_2023_zima (1).xlsx')
+data = process_the_file.get_by('ФИО', file)
 
+pprint.pprint(file)
+pprint.pprint(data)

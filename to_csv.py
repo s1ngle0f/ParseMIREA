@@ -1,5 +1,5 @@
 import pandas as pd
-
+import re
 
 ONE_PART = 15
 END_LINE_IN_FILE = 85
@@ -27,11 +27,13 @@ def fill_free_space(path):
 #     for i in range(7, len(file.columns), 15):
 
 
-def create_csv_from_excel(name):
+def create_csv_from_excel(name, is_fill_free_space = False):
     path = f'input/{name}'
     read_file = pd.read_excel(path)
+    # print(read_file.ffill(axis=0).iloc[:10,1:6])
     csv_path = f'csv/{path[path.find("/")+1:].replace(".xlsx", ".csv")}'
     read_file.to_csv(csv_path, header=False, index=False)
-    fill_free_space(csv_path)
-# create_csv_from_excel('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
+    if is_fill_free_space:
+        fill_free_space(csv_path)
+create_csv_from_excel('IIT_1-kurs_2022_2023_zima (1).xlsx')
 
