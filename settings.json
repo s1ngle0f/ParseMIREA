@@ -1,5 +1,5 @@
 {
-  "prepods": true,
-  "auditories": false,
+  "prepods": false,
+  "auditories": true,
   "lessons": false
 }

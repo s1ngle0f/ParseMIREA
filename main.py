@@ -18,10 +18,13 @@ if __name__ == '__main__':
     with open('settings.json') as f:
         settings = json.load(f)
         if settings['prepods']:
-            write_to_template.write_all('ФИО', 'prepods_result')
+            # write_to_template.write_all('ФИО', 'prepods_result')
+            write_to_template.write_all_exams('ФИО', 'prepods_result')
         if settings['auditories']:
-            write_to_template.write_all('Аудитория', 'auditory_result')
+            # write_to_template.write_all('Аудитория', 'auditory_result')
+            write_to_template.write_all_exams('Аудитория', 'auditory_result')
         if settings['lessons']:
-            write_to_template.write_all('Предмет', 'lessons_result')
+            # write_to_template.write_all('Предмет', 'lessons_result')
+            write_to_template.write_all_exams('Предмет', 'lessons_result')
 
     print("--- %s seconds ---" % (round(time.time() - start_time, 2)))

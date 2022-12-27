@@ -108,10 +108,53 @@ import re
 # fios = file.iloc[0, :10]
 #
 # print(fios.iloc[10, :])
+
+
+
 import process_the_file
+import DateTime
 
-file = process_the_file.process_exams('IIT_1-kurs_2022_2023_zima (1).xlsx')
-data = process_the_file.get_by('ФИО', file)
+# file = process_the_file.process_exams('IIT_1-kurs_2022_2023_zima (1).xlsx')
+# data = process_the_file.get_by('ФИО', file)
+#
+# times = []
+# # times.append('20-00')
+#
+# def sort_time(time):
+#     return DateTime.DateTime(time)
+#
+# for el in file:
+#     if el.get('Время') not in times:
+#         times.append(el.get('Время'))
+#
+# print(sorted(times, key=sort_time))
+# # pprint.pprint(file)
+# pprint.pprint(data)
 
-pprint.pprint(file)
-pprint.pprint(data)
+
+
+parity_num_time = {
+    1: '9-00',
+    2: '10-40',
+    3: '12-40',
+    4: '14-20',
+    5: '16-20',
+    6: '18-00'
+}
+
+def get_parity(time):
+    time = DateTime.DateTime(time)
+    for k, v in parity_num_time.items():
+        if time <= DateTime.DateTime(v):
+            if k > 1:
+                if DateTime.DateTime(v) - time < time - DateTime.DateTime(parity_num_time.get(k-1)):
+                    return (k, v)
+                else:
+                    return (k-1, parity_num_time.get(k-1))
+            else:
+                if time - DateTime.DateTime(v) < DateTime.DateTime(parity_num_time.get(k+1)) - time:
+                    return (k, v)
+                else:
+                    return (k+1, parity_num_time.get(k+1))
+
+print((get_parity('10-00')[0]-1))

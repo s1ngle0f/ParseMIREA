@@ -7,6 +7,7 @@ from openpyxl.styles import PatternFill
 import process_the_file
 from process_the_file import process, get_by, process_dirty, process_exams
 import copy_sheet
+import DateTime
 
 
 weekdays = {
@@ -25,6 +26,38 @@ parity = {
 }
 
 ban_symbols = [',', '\n\n', '\n', ', ']
+
+parity_num_time = {
+    1: '9-00',
+    2: '10-40',
+    3: '12-40',
+    4: '14-20',
+    5: '16-20',
+    6: '18-00',
+    7: '19-40'
+}
+
+def get_parity(time):
+    try:
+        if type(time) != float:
+            # print(time)
+            time = DateTime.DateTime(time)
+            for k, v in parity_num_time.items():
+                if time <= DateTime.DateTime(v):
+                    if k > 1:
+                        if DateTime.DateTime(v) - time < time - DateTime.DateTime(parity_num_time.get(k-1)):
+                            return (k, v)
+                        else:
+                            return (k-1, parity_num_time.get(k-1))
+                    else:
+                        if time - DateTime.DateTime(v) < DateTime.DateTime(parity_num_time.get(k+1)) - time:
+                            return (k, v)
+                        else:
+                            return (k+1, parity_num_time.get(k+1))
+        else:
+            return (8, 'Неизвестно')
+    except:
+        return (8, time)
 
 def write(sort_by, name, result_filename):
     # preparated_data = get_by(sort_by, process(name))
@@ -88,20 +121,70 @@ def write_exams(sort_by, name, result_filename):
 
         for info in val:
             # print(k, weekday, num_lesson, num_chetnost, info)
-            line_num = 4+weekdays.get(info.get('День недели'))*16+(int(info.get('Номер пары'))-1)*2+parity.get(info.get('Четность недели'))
-            ws[f'E{line_num}'] = info.get('Предмет')
-            ws[f'F{line_num}'] = info.get('Вид занятий')
-            ws[f'G{line_num}'] = info.get('ФИО')
-            ws[f'H{line_num}'] = info.get('Аудитория')
-            ws[f'I{line_num}'] = info.get('Группа')
-
-            # if any(ban_symbol in info.get('ФИО') for ban_symbol in ban_symbols):#Только для определения коллизий ФИО
-            #     ws[f'J{line_num}'].fill = PatternFill(start_color="ff0000", end_color="ff0000", fill_type="solid")
+            # print(k)
+            # print(info)
+            # print(get_parity(info.get('Время')))
+            # print(ws['Z20'].value)
+            # print(type(ws['K7']))
+            if info.get('Предмет').find('\n') != -1:
+                line_num = 4+(int(info.get('День')) - 9)*16+(get_parity(info.get('Время'))[0]-1)*2
+                ws[f'C{line_num}'] = info.get('Время')
+                ws[f'D{line_num}'] = info.get('Предмет')
+                ws[f'E{line_num}'] = info.get('Вид занятий')
+                ws[f'F{line_num}'] = info.get('ФИО')
+                ws[f'G{line_num}'] = info.get('Аудитория')
+                if ws[f'H{line_num}'].value == None:
+                    ws[f'H{line_num}'] = info.get('Группа')
+                else:
+                    ws[f'H{line_num}'] = ws[f'H{line_num}'].value + '\n' + info.get('Группа')
+            else:
+                print(info)
+                predmets = info.get('Предмет').split('\n')
+                for i, predmet in enumerate(predmets):
+                    if type(info.get('Время')) != float:
+                        _time = info.get('Время').split('\n')
+                        line_num = 4 + (int(info.get('День')) - 9) * 16 + (get_parity(_time[i])[0] - 1) * 2
+                    else:
+                        line_num = 4 + (int(info.get('День')) - 9) * 16 + (7) * 2
+                    if type(info.get('Аудитория')) != float:
+                        _auditories = info.get('Аудитория').split('\n')
+                        ws[f'G{line_num}'] = _auditories[i]
+                    else:
+                        _auditories = 'Неизвестно'
+                        ws[f'G{line_num}'] = _auditories
+                    ws[f'C{line_num}'] = info.get('Время')
+                    ws[f'D{line_num}'] = predmet
+                    ws[f'E{line_num}'] = info.get('Вид занятий')
+                    if type(info.get('ФИО')) != float:
+                        ws[f'F{line_num}'] = info.get('ФИО').split('\n')[i]
+                    else:
+                        ws[f'F{line_num}'] = 'Неизвестно'
+                    ws[f'G{line_num}'] = _auditories[i]
+                    if ws[f'H{line_num}'].value == None:
+                        ws[f'H{line_num}'] = info.get('Группа')
+                    else:
+                        ws[f'H{line_num}'] = ws[f'H{line_num}'].value + '\n' + info.get('Группа')
 
     wb.save(f'output/{result_filename}.xlsx')
 
 # write('IIT_3-kurs_22_23_osen_07.10.2022.xlsx')
 
+
+def write_all_exams(sort_by, result_filename):
+    for files in os.listdir('input'):
+        if files.find('ITU_mag') != -1:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 3
+            write_exams(sort_by, files, result_filename)
+        else:
+            process_the_file.COUNT_GROUPS_IN_ONE_PART = 2
+            write_exams(sort_by, files, result_filename)
+
+    def get_sheets_title(sheet):
+        return sheet.title
+
+    none_sort_wb = openpyxl.load_workbook(f'output/{result_filename}.xlsx')
+    none_sort_wb._sheets.sort(key=get_sheets_title)
+    none_sort_wb.save(f'output/{result_filename}.xlsx')
 
 def write_all(sort_by, result_filename):
     for files in os.listdir('input'):
