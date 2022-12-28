@@ -133,28 +133,99 @@ import DateTime
 
 
 
-parity_num_time = {
-    1: '9-00',
-    2: '10-40',
-    3: '12-40',
-    4: '14-20',
-    5: '16-20',
-    6: '18-00'
-}
+# parity_num_time = {
+#     1: '9-00',
+#     2: '10-40',
+#     3: '12-40',
+#     4: '14-20',
+#     5: '16-20',
+#     6: '18-00'
+# }
+#
+# def get_parity(time):
+#     time = DateTime.DateTime(time)
+#     for k, v in parity_num_time.items():
+#         if time <= DateTime.DateTime(v):
+#             if k > 1:
+#                 if DateTime.DateTime(v) - time < time - DateTime.DateTime(parity_num_time.get(k-1)):
+#                     return (k, v)
+#                 else:
+#                     return (k-1, parity_num_time.get(k-1))
+#             else:
+#                 if time - DateTime.DateTime(v) < DateTime.DateTime(parity_num_time.get(k+1)) - time:
+#                     return (k, v)
+#                 else:
+#                     return (k+1, parity_num_time.get(k+1))
+#
+# print((get_parity('10-00')[0]-1))
 
-def get_parity(time):
-    time = DateTime.DateTime(time)
-    for k, v in parity_num_time.items():
-        if time <= DateTime.DateTime(v):
-            if k > 1:
-                if DateTime.DateTime(v) - time < time - DateTime.DateTime(parity_num_time.get(k-1)):
-                    return (k, v)
-                else:
-                    return (k-1, parity_num_time.get(k-1))
-            else:
-                if time - DateTime.DateTime(v) < DateTime.DateTime(parity_num_time.get(k+1)) - time:
-                    return (k, v)
-                else:
-                    return (k+1, parity_num_time.get(k+1))
+# print(chr(65+4))
+#
+# for i in range(ord('A'), ord('I')+1):
+#     print(chr(i))
 
-print((get_parity('10-00')[0]-1))
+# main_auditories = ['Г-226-1', 'Г-226-2', 'Г-227-1', 'Г-227-2']
+# print(main_auditories.index('Г-227-1'))
+
+# def copy_cells_from_to(from_start, from_end, to_start):
+#     start_line = int(from_start[1])
+#     end_line = int(from_end[1])
+#     start_letter = ord(from_start[0])
+#     end_letter = ord(from_end[0])
+#     for line in range(start_line, end_line+1):
+#         for letter in range(start_letter, end_letter+1):
+#             # ws[f'{chr(ord(to_start[0]) + letter - start_letter)}{int(to_start[1]) + line - start_line}'] = ws[f'{chr(letter)}{line}']
+#             # print(f'{chr(letter)}{line}')
+#             print( f'{chr(ord(to_start[0]) + letter - start_letter)}{int(to_start[1]) + line - start_line}')
+#             # print( f'{chr(ord(to_start[0]) + letter - start_letter)}{int(to_start[1]) + line - start_line}' + " ::: " + f'{chr(letter)}{line}')
+#
+# copy_cells_from_to('A1', 'C3', 'A5')
+
+
+import copy_sheet
+
+def copy_cells_from_to(ws, from_start, from_end, to_start):
+    start_line = int(from_start[1])
+    end_line = int(from_end[1])
+    start_letter = ord(from_start[0])
+    end_letter = ord(from_end[0])
+    for line in range(start_line, end_line+1):
+        for letter in range(start_letter, end_letter+1):
+            print(f'{chr(ord(to_start[0]) + letter - start_letter)}{int(to_start[1:]) + line - start_line}' + ' => ' + f'{chr(letter)}{line}')
+            print(f'{line} {start_line}')
+            ws[f'{chr(ord(to_start[0]) + letter - start_letter)}{int(to_start[1:]) + line - start_line}'] = ws[f'{chr(letter)}{line}'].value
+
+def write_IiPPO_auditory(result_filename):
+    # preparated_data = get_by(sort_by, process(name))
+    try:
+        wb = openpyxl.load_workbook(f'output/{result_filename}.xlsx')
+    except:
+        wb = openpyxl.Workbook()
+
+        # Удаление листа, создаваемого по умолчанию, при создании документа
+        for sheet_name in wb.sheetnames:
+            sheet = wb.get_sheet_by_name(sheet_name)
+            wb.remove_sheet(sheet)
+
+    template = openpyxl.load_workbook('templates/pattern_test.xlsx')['Шаблон']
+
+    try:
+        ws = wb.get_sheet_by_name('Занятость аудиторий')
+    except:
+        ws = wb.create_sheet('Занятость аудиторий')
+        copy_sheet.copy_sheet(template, ws)
+
+    header = ['A1', 'I2']
+    header_line = 1
+    line_skip = 5
+    last_auditories_count = 0
+    for i in range(2):
+        # auditories = ['Г-226-1', 'Г-226-2', 'Г-227-1', 'Г-227-2']
+        header_line += line_skip + last_auditories_count + 1
+        copy_cells_from_to(ws, header[0], header[1], f'A{header_line}')
+        print(header_line)
+        ws[f'B{header_line}'] = str(i) + ' января'
+
+    wb.save(f'output/{result_filename}.xlsx')
+
+write_IiPPO_auditory('test')
